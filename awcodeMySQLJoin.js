@@ -175,10 +175,15 @@ app.get("/", async (req, res) => {
         const items = await getItemsWithJoins("Today");
         const priorities = await getAllPriorities();
 
-        res.render("list", { 
-            listTitle: "Today", 
+        const [allLists] = await pool.query(
+            "SELECT name FROM lists_join ORDER BY name ASC"
+        );
+
+        res.render("list", {
+            listTitle: "Today",
             newListItems: items,
-            priorities: priorities
+            priorities: priorities,
+            allLists: allLists
         });
     } catch (err) {
         console.error("Error en GET /:", err);
@@ -300,13 +305,19 @@ app.get("/:customListName", async (req, res) => {
             }
             res.redirect("/" + customListName);
         } else {
+
             const items = await getItemsWithJoins(customListName);
             const priorities = await getAllPriorities();
 
-            res.render("list", { 
-                listTitle: customListName, 
+            const [allLists] = await pool.query(
+                "SELECT name FROM lists_join ORDER BY name ASC"
+            );
+
+            res.render("list", {
+                listTitle: customListName,
                 newListItems: items,
-                priorities: priorities
+                priorities: priorities,
+                allLists: allLists
             });
         }
     } catch (err) {
@@ -314,7 +325,6 @@ app.get("/:customListName", async (req, res) => {
         res.status(500).send("Error al buscar la lista: " + err.message);
     }
 });
-
 // RUTA 5: POST / (Crear tarea con prioridad seleccionada)
 app.post("/", async (req, res) => {
     const itemName = req.body.newItem;
