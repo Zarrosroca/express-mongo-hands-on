@@ -15,6 +15,7 @@ app.set('view engine', 'ejs');
 // Configure body-parser middleware to parse form data and serve static files from the "public" directory
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
+app.get("/favicon.ico", (req, res) => res.status(204).end());
 
 // Connect to a MongoDB database named todolistDB with a deprecation fix for the URL parser
 //mongoose.connect("mongodb://localhost:27017/todolistDB", { useNewUrlParser: true });
@@ -68,7 +69,7 @@ app.get("/", async (req, res) => {
             res.redirect("/");
         } else {
             // If items are found, render the 'list' EJS template with the found items
-            const allLists = await List.find({}, "name");
+            const allLists = await List.find({ name: { $ne: "Favicon.ico" } }, "name");
 res.render("list", { listTitle: "Today", newListItems: foundItems, allLists });
         }
     } catch (err) {
@@ -97,7 +98,7 @@ app.get("/:customListName", async (req, res) => {
             res.redirect("/" + customListName);
         } else {
             // If the list exists, render it with its items
-           const allLists = await List.find({}, "name");
+           const allLists = await List.find({ name: { $ne: "Favicon.ico" } }, "name");
 res.render("list", { listTitle: foundList.name, newListItems: foundList.items, allLists });
         }
     } catch (err) {
