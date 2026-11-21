@@ -18,13 +18,19 @@ app.use(express.static("public"));
 
 // Connect to a MongoDB database named todolistDB with a deprecation fix for the URL parser
 //mongoose.connect("mongodb://localhost:27017/todolistDB", { useNewUrlParser: true });
-//const MONGODB_ATLAS_URI = "mongodb+srv://fjbanezares:Pepito123@cluster0.h5kauwo.mongodb.net/?retryWrites=true&w=majority"
 
 
 
-const MONGODB_ATLAS_URI = "mongodb+srv://fjbanezares:Pepito123@cluster0.n87gd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-mongoose.connect(MONGODB_ATLAS_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+const MONGODB_ATLAS_URI = process.env.MONGODB_URI;
 
+if (!MONGODB_ATLAS_URI) {
+    throw new Error("Falta la variable MONGODB_URI");
+}
+
+mongoose.connect(MONGODB_ATLAS_URI).catch((error) => {
+    console.error("Error al conectar con MongoDB Atlas:", error.message);
+    process.exit(1);
+});
 
 // Define a schema for the items in the to-do list, consisting of a single field 'name'
 // Each Item (task in a To Do List) will have only one field (a string)
@@ -62,7 +68,8 @@ app.get("/", async (req, res) => {
             res.redirect("/");
         } else {
             // If items are found, render the 'list' EJS template with the found items
-            res.render("list", { listTitle: "Today", newListItems: foundItems });
+            const allLists = await List.find({}, "name");
+res.render("list", { listTitle: "Today", newListItems: foundItems, allLists });
         }
     } catch (err) {
         // Log any errors and send a server error response
@@ -90,7 +97,8 @@ app.get("/:customListName", async (req, res) => {
             res.redirect("/" + customListName);
         } else {
             // If the list exists, render it with its items
-            res.render("list", { listTitle: foundList.name, newListItems: foundList.items });
+           const allLists = await List.find({}, "name");
+res.render("list", { listTitle: foundList.name, newListItems: foundList.items, allLists });
         }
     } catch (err) {
         // Log any errors and send a server error response
